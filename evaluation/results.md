@@ -2,7 +2,7 @@
 
 Synthetic, anonymized resume/job-description pairs are used to check deterministic ranking behavior.
 
-- Generated at: `2026-07-23T15:01:46.701578+00:00`
+- Generated at: `2026-08-11T15:38:21.759044+00:00`
 - Cases: `6`
 - Ranking groups: `2`
 - Ranking consistency rate: `100.00%`
@@ -21,9 +21,9 @@ Synthetic, anonymized resume/job-description pairs are used to check determinist
 
 ## Case Scores
 
-- `ai_strong`: score `83`, verdict `Strong match`
-- `ai_moderate`: score `21`, verdict `Needs improvement`
+- `ai_strong`: score `87`, verdict `Strong match`
+- `ai_moderate`: score `23`, verdict `Needs improvement`
 - `ai_weak`: score `11`, verdict `Needs improvement`
-- `nurse_strong`: score `77`, verdict `Strong match`
-- `nurse_moderate`: score `21`, verdict `Needs improvement`
+- `nurse_strong`: score `87`, verdict `Strong match`
+- `nurse_moderate`: score `23`, verdict `Needs improvement`
 - `nurse_weak`: score `16`, verdict `Needs improvement`

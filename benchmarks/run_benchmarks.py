@@ -16,7 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from backend.scorer import analyze_resume  # noqa: E402
+from backend.rag import retrieve_guidance  # noqa: E402
+from backend.scorer import analyze_resume, format_ats_report  # noqa: E402
 from utils.pdf_reader import extract_text_from_pdf  # noqa: E402
 
 RESULTS_JSON = ROOT / "benchmarks" / "results.json"
@@ -74,22 +75,35 @@ def summarize(samples: list[float]) -> dict:
 def run_benchmarks(iterations: int) -> dict:
     pdf_extraction_ms = []
     scoring_ms = []
+    retrieval_ms = []
     total_analysis_ms = []
+    total_report_ms = []
     score_samples = []
 
     for _ in range(iterations):
+        def build_report() -> str:
+            report_text = extract_text_from_pdf(make_pdf(RESUME_TEXT))
+            report_analysis = analyze_resume(report_text, JOB_DESCRIPTION)
+            guidance = retrieve_guidance(report_analysis, JOB_DESCRIPTION)
+            return format_ats_report(report_analysis, retrieved_guidance=guidance)
+
         pdf = make_pdf(RESUME_TEXT)
         resume_text, pdf_ms = timed(lambda pdf=pdf: extract_text_from_pdf(pdf))
         _, score_ms = timed(
             lambda resume_text=resume_text: analyze_resume(resume_text, JOB_DESCRIPTION)
         )
+        analysis = analyze_resume(resume_text, JOB_DESCRIPTION)
+        _, rag_ms = timed(lambda analysis=analysis: retrieve_guidance(analysis, JOB_DESCRIPTION))
         analysis, total_ms = timed(
             lambda: analyze_resume(extract_text_from_pdf(make_pdf(RESUME_TEXT)), JOB_DESCRIPTION)
         )
+        _, report_ms = timed(build_report)
 
         pdf_extraction_ms.append(pdf_ms)
         scoring_ms.append(score_ms)
+        retrieval_ms.append(rag_ms)
         total_analysis_ms.append(total_ms)
+        total_report_ms.append(report_ms)
         score_samples.append(analysis["score"])
 
     return {
@@ -108,7 +122,9 @@ def run_benchmarks(iterations: int) -> dict:
         "score_samples": score_samples,
         "pdf_extraction": summarize(pdf_extraction_ms),
         "deterministic_scoring": summarize(scoring_ms),
+        "retrieved_guidance": summarize(retrieval_ms),
         "total_analysis_without_mlx": summarize(total_analysis_ms),
+        "total_report_without_mlx": summarize(total_report_ms),
     }
 
 
@@ -130,7 +146,9 @@ def write_markdown(results: dict, path: Path) -> None:
     for label, key in [
         ("PDF extraction", "pdf_extraction"),
         ("Deterministic scoring", "deterministic_scoring"),
+        ("Local retrieved guidance", "retrieved_guidance"),
         ("Total analysis without MLX", "total_analysis_without_mlx"),
+        ("Total report without MLX", "total_report_without_mlx"),
     ]:
         stats = results[key]
         lines.extend(
@@ -138,7 +156,6 @@ def write_markdown(results: dict, path: Path) -> None:
                 f"### {label}",
                 "",
                 f"- Median latency: `{stats['median_ms']:.2f} ms`",
-                f"- Mean latency: `{stats['mean_ms']:.2f} ms`",
                 f"- Min/Max latency: `{stats['min_ms']:.2f} ms` / "
                 f"`{stats['max_ms']:.2f} ms`",
                 "",

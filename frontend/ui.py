@@ -169,6 +169,7 @@ def render_feedback(feedback_text):
     score = extract_score(feedback_text)
     verdict = extract_value(feedback_text, "Verdict") or "Review needed"
     role = extract_value(feedback_text, "Target Role") or "Target role"
+    comparison_scope = extract_block(feedback_text, "Comparison Scope")
     matched = split_items(extract_block(feedback_text, "Matched Keywords"))
     missing = split_items(extract_block(feedback_text, "Missing / Weak Keywords"))
     role_gaps = extract_block(feedback_text, "Role Gaps")
@@ -176,6 +177,7 @@ def render_feedback(feedback_text):
     structure = extract_block(feedback_text, "Resume Structure")
     meaning = extract_block(feedback_text, "What this means")
     fixes = extract_block(feedback_text, "Recommended Fixes")
+    retrieved_guidance = extract_block(feedback_text, "Retrieved Guidance")
     breakdown = extract_breakdown(feedback_text)
 
     render_score_ring(score)
@@ -183,6 +185,8 @@ def render_feedback(feedback_text):
     st.markdown(f"### {verdict}")
     st.caption(role)
     st.write(meaning or "Review the sections below to improve ATS alignment.")
+    if comparison_scope:
+        st.caption(comparison_scope)
 
     left, right = st.columns(2)
     with left:
@@ -211,3 +215,7 @@ def render_feedback(feedback_text):
 
     st.markdown("#### Detailed feedback")
     st.success(fixes or feedback_text)
+
+    if retrieved_guidance:
+        st.markdown("#### Retrieved guidance")
+        st.info(retrieved_guidance)

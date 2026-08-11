@@ -13,10 +13,11 @@ This project demonstrates practical AI engineering judgment: deterministic scori
 - PDF resume upload with PyMuPDF text extraction
 - Deterministic ATS-style scoring from keyword overlap, role-title alignment, resume structure, and content depth
 - Evidence-preserving report output with matched keywords, missing terms, role gaps, score breakdown, and resume edits
+- Local retrieval-grounded guidance that selects relevant resume-improvement advice without changing the score
 - Optional MLX/Gemma 3 explanation layer that cannot change the deterministic score or scoring evidence
 - Streamlit UI with downloadable Markdown reports
 - Two-analysis-per-client limit for public demos, keyed by salted client-address hash rather than raw IP storage
-- Controlled PDF errors for empty, malformed, oversized, scanned, or image-only files
+- Controlled PDF errors for empty, malformed, encrypted, oversized, over-page-limit, scanned, or image-only files
 - Synthetic evaluation dataset and latency benchmark scripts
 - Fast CI workflow that avoids MLX, GPU, paid APIs, and private secrets
 
@@ -34,7 +35,9 @@ flowchart TD
     L --> D["PDF extraction<br/>PyMuPDF"]
     D --> E["Deterministic scorer"]
     C --> E
-    E --> F["ATS evidence report"]
+    E --> R["Local retrieval guidance"]
+    R --> F["ATS evidence report"]
+    E --> F
     F --> G{"MLX enabled and available?"}
     G -- "No / CI / cloud fallback" --> H["Return deterministic report"]
     G -- "Yes, Apple Silicon local run" --> I["Gemma 3 explanation via MLX"]
@@ -43,6 +46,8 @@ flowchart TD
 ```
 
 The deterministic scorer in `backend/scorer.py` owns the score. `backend/processor.py` may ask MLX to explain the result, but the prompt explicitly prevents the model from changing the score, matched keywords, missing keywords, or evidence.
+
+The retrieval layer in `backend/rag.py` retrieves local guidance snippets from a curated in-repository knowledge base. It improves recommendation context but does not compare candidates, average resume scores, call external APIs, or mutate scoring evidence.
 
 ## Evaluation
 
@@ -74,9 +79,10 @@ Latest measured local run:
 
 - Environment: Python `3.14.5`, macOS `26.5.2`, arm64
 - Iterations: `10`
-- PDF extraction median latency: `1.00 ms`
-- Deterministic scoring median latency: `0.75 ms`
-- Total analysis without MLX median latency: `2.90 ms`
+- PDF extraction median latency: `0.89 ms`
+- Deterministic scoring median latency: `0.56 ms`
+- Local retrieved guidance median latency: `0.07 ms`
+- Total deterministic report without MLX median latency: `2.52 ms`
 - Score reproducible: `True`
 
 Run it:
@@ -117,10 +123,13 @@ ATS_ENABLE_MLX=1 streamlit run app.py
 | `MLX_MODEL` | `mlx-community/gemma-3-1b-it-4bit` | MLX model name or local model path |
 | `ATS_MLX_TIMEOUT_SECONDS` | `300` | Timeout for MLX explanation generation |
 | `ATS_MAX_PDF_BYTES` | `8388608` | Uploaded PDF size limit |
+| `ATS_MAX_PDF_PAGES` | `10` | Uploaded PDF page-count limit for demo reliability |
 | `ATS_USAGE_LIMIT` | `2` | Analysis runs allowed per client address |
 | `ATS_USAGE_LIMIT_ENABLED` | `1` | Set `0` to disable the public-demo limiter locally |
 | `ATS_USAGE_LIMIT_PATH` | `/tmp/ats_resume_checker_usage.json` | File-backed usage counter path |
 | `ATS_USAGE_SALT` | generated state salt | Optional HMAC salt for client-address hashing |
+| `ATS_ENABLE_RAG` | `1` | Enables local retrieved guidance in deterministic reports |
+| `ATS_RAG_TOP_K` | `3` | Number of guidance snippets to retrieve, capped at 6 |
 
 ## Testing
 
@@ -162,8 +171,11 @@ See `docs/privacy.md` for details.
 ## Limitations
 
 - The score is a heuristic ATS-style match score, not a real vendor ATS result.
+- The score compares one resume with one job description; it is not an average across candidates or uploaded resumes.
+- The current retrieval layer is a local lexical guidance retriever, not a semantic vector database.
 - The evaluation dataset is small and synthetic.
 - Scanned/image-only PDFs are rejected unless OCR has already been applied.
+- Encrypted PDFs and unusually long PDFs are rejected with controlled user-facing errors.
 - The file-backed usage limiter is suitable for a lightweight demo, not a durable abuse-prevention system across redeploys or multiple replicas.
 - MLX explanations are local Apple Silicon only unless the deployment runtime supports MLX and Apple Metal.
 
@@ -172,6 +184,7 @@ See `docs/privacy.md` for details.
 ```text
 app.py                         Streamlit entry point
 backend/scorer.py              Deterministic ATS scoring
+backend/rag.py                 Local retrieval guidance for report recommendations
 backend/processor.py           PDF-to-report orchestration and optional MLX explanation
 frontend/ui.py                 Streamlit input and feedback rendering
 utils/pdf_reader.py            Safe PDF extraction

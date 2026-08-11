@@ -9,6 +9,8 @@ STOPWORDS = {
     "your", "work", "working", "role", "team", "teams", "ability", "skills",
     "experience", "including", "required", "requirements", "responsibilities",
     "include", "looking",
+    "candidate", "candidates", "ideal", "need", "needs", "plus", "position",
+    "prefer", "preferred", "requirement", "responsibility", "seeking", "strong",
 }
 
 SECTION_NAMES = [
@@ -50,11 +52,14 @@ def candidate_terms(text, max_terms=30):
 
     phrases = []
     for size in (2,):
-        for i in range(len(tokens) - size + 1):
-            phrase = " ".join(tokens[i:i + size])
-            if any(part in STOPWORDS for part in phrase.split()):
-                continue
-            phrases.append(phrase)
+        for chunk in re.split(r"[\n.;:!?()]+", text):
+            chunk_tokens = tokenize(chunk)
+            for i in range(len(chunk_tokens) - size + 1):
+                phrase_parts = chunk_tokens[i:i + size]
+                if any(part in STOPWORDS or len(part) <= 2 for part in phrase_parts):
+                    continue
+                phrase = " ".join(phrase_parts)
+                phrases.append(phrase)
 
     phrase_counts = Counter(phrases)
     scored = {}
@@ -204,16 +209,32 @@ def analyze_resume(resume_text, job_description):
     }
 
 
-def format_ats_report(analysis):
+def format_retrieved_guidance(retrieved_guidance):
+    if not retrieved_guidance:
+        return "- No retrieved guidance was used for this report."
+
+    lines = []
+    for item in retrieved_guidance:
+        title = item["title"]
+        guidance = item["guidance"]
+        lines.append(f"- {title}: {guidance}")
+    return "\n".join(lines)
+
+
+def format_ats_report(analysis, retrieved_guidance=None):
     matched = analysis["matched_terms"] or ["No strong keyword matches found."]
     missing = analysis["missing_terms"] or ["No major missing terms found."]
     sections = analysis["found_sections"] or ["Add clear resume section headings."]
+    guidance = format_retrieved_guidance(retrieved_guidance or [])
 
     return f"""ATS Match Score: {analysis["score"]}/100
 
 Verdict: {analysis["verdict"]}
 
 Target Role: {analysis["job_title"]}
+
+Comparison Scope:
+This score compares one resume against one job description. It is not an average across resumes or candidates.
 
 Matched Keywords:
 {", ".join(matched)}
@@ -244,5 +265,8 @@ Recommended Fixes:
 - Mirror the job description's terminology in your skills, summary, and experience bullets.
 - Use clear section headings such as Summary, Experience, Skills, Education, Projects, Certifications, or Licenses.
 - Add measurable evidence for the most important requirements in the job description.
+
+Retrieved Guidance:
+{guidance}
 
 Fit: {analysis["score_10"]}/10"""

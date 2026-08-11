@@ -16,6 +16,9 @@ Score Breakdown:
 - Keyword match: 80/100
 - Role/title alignment: 50/100
 
+Retrieved Guidance:
+- Mirror the target role clearly: Use accurate target-role wording.
+
 Fit: 7.2/10"""
 
 
@@ -43,3 +46,7 @@ def test_extract_breakdown_reads_progress_rows():
         ("Keyword match", 80),
         ("Role/title alignment", 50),
     ]
+
+
+def test_extract_retrieved_guidance_block():
+    assert "Mirror the target role clearly" in extract_block(REPORT, "Retrieved Guidance")

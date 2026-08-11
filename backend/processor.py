@@ -7,12 +7,14 @@ from importlib.util import find_spec
 
 import streamlit as st
 
+from backend.rag import retrieve_guidance
 from backend.scorer import analyze_resume, format_ats_report
 from utils.pdf_reader import PDFReadError, extract_text_from_pdf
 
 DEFAULT_MLX_MODEL = "mlx-community/gemma-3-1b-it-4bit"
 MAX_TOKENS = 900
 DEFAULT_MLX_TIMEOUT_SECONDS = 300
+DEFAULT_RAG_TOP_K = 3
 logger = logging.getLogger(__name__)
 
 
@@ -67,10 +69,23 @@ def get_mlx_timeout_seconds():
         return DEFAULT_MLX_TIMEOUT_SECONDS
 
 
+def should_use_rag():
+    mode = _flag_value("ATS_ENABLE_RAG", "1")
+    return mode not in {"0", "false", "no", "off", "disabled", "never"}
+
+
+def get_rag_top_k():
+    raw_top_k = _secret_or_env("ATS_RAG_TOP_K", DEFAULT_RAG_TOP_K)
+    try:
+        return max(0, min(6, int(raw_top_k)))
+    except (TypeError, ValueError):
+        return DEFAULT_RAG_TOP_K
+
+
 def build_mlx_prompt(ats_report, job_description):
     return f"""
 You are an ATS resume advisor. Explain the deterministic ATS-style analysis below in clear, helpful language.
-Do not change the score, matched keywords, missing keywords, or scoring evidence. Your job is only to explain what the user should fix.
+Do not change the score, matched keywords, missing keywords, retrieved guidance, or scoring evidence. Your job is only to explain what the user should fix.
 
 === ATS ANALYSIS ===
 {ats_report}
@@ -148,13 +163,19 @@ def process_resume(resume_file, job_description):
 
     logger.info("PDF extracted: resume_chars=%s resume_words=%s", len(resume_text), len(resume_text.split()))
     analysis = analyze_resume(resume_text, job_description)
-    ats_report = format_ats_report(analysis)
+    retrieved_guidance = (
+        retrieve_guidance(analysis, job_description, top_k=get_rag_top_k())
+        if should_use_rag()
+        else []
+    )
+    ats_report = format_ats_report(analysis, retrieved_guidance=retrieved_guidance)
     logger.info(
-        "ATS score computed: score=%s verdict=%s matched_terms=%s missing_terms=%s",
+        "ATS score computed: score=%s verdict=%s matched_terms=%s missing_terms=%s retrieved_guidance=%s",
         analysis["score"],
         analysis["verdict"],
         len(analysis["matched_terms"]),
         len(analysis["missing_terms"]),
+        len(retrieved_guidance),
     )
 
     if not should_use_mlx():

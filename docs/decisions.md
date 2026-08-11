@@ -8,6 +8,12 @@ The project keeps deterministic scoring as the authoritative output because resu
 
 `mlx-lm` is kept in `requirements-mlx.txt`, not `requirements.txt`. This preserves Apple Silicon support while allowing Linux CI and Streamlit Cloud to run without Apple Metal.
 
+## Local Retrieval Instead Of External RAG Infrastructure
+
+The retrieval layer uses a curated local guidance corpus and deterministic lexical matching. This is enough for the current small knowledge base and keeps CI, Streamlit Cloud, and local setup free of vector databases, embedding downloads, paid APIs, and private secrets.
+
+The retrieved snippets support recommendations only. They do not change scores, matched terms, missing terms, or scoring evidence.
+
 ## Synthetic Evaluation Data
 
 The evaluation data is synthetic to avoid committing personal resumes or sensitive user data. The current evaluation checks ranking consistency for strong, moderate, and weak pairs, rather than claiming production accuracy.

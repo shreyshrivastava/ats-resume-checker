@@ -37,6 +37,14 @@ def test_token_candidate_terms_are_deterministic():
     assert "python" in first
 
 
+def test_candidate_terms_ignore_recruiting_filler_words():
+    terms = candidate_terms("Role: Applied AI Engineer. We need Python and FastAPI.")
+
+    assert "engineer need" not in terms
+    assert "need python" not in terms
+    assert "engineer python" not in terms
+
+
 def test_term_matching_handles_phrases_and_inflection():
     assert term_in_text("deployment monitoring", STRONG_RESUME)
     assert term_in_text("APIs", MODERATE_RESUME)

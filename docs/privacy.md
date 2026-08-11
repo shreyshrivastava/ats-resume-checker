@@ -16,6 +16,8 @@ The app does not intentionally store uploaded resumes or pasted job descriptions
 
 Runtime logs are written to `logs/ats_resume_checker.log` by default. Logs include filenames, input lengths, score metadata, error categories, and fallback events. Logs should not include full resume text, full job-description text, raw IP addresses, API keys, or model outputs.
 
+PDF validation rejects empty, malformed, encrypted, over-size, over-page-limit, and image-only PDFs with controlled errors. The app does not intentionally persist the PDF after runtime extraction.
+
 The usage limiter stores a local JSON file at `/tmp/ats_resume_checker_usage.json` by default. It contains:
 
 - a generated salt when `ATS_USAGE_SALT` is not set
@@ -28,6 +30,8 @@ It does not store raw IP addresses.
 ## Local Versus Cloud Processing
 
 Deterministic mode runs locally in the Python process and does not call paid APIs.
+
+Retrieved guidance is selected from a local in-repository guidance corpus. It does not send resumes, job descriptions, or extracted text to external retrieval services.
 
 MLX mode runs locally through `mlx-lm` and is intended for Apple Silicon machines with Apple Metal. The normal CI and Streamlit Cloud path disables MLX.
 

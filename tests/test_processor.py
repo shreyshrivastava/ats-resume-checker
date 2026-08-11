@@ -29,6 +29,18 @@ def test_should_use_mlx_can_be_disabled(monkeypatch):
     assert processor.should_use_mlx() is False
 
 
+def test_should_use_rag_can_be_disabled(monkeypatch):
+    monkeypatch.setenv("ATS_ENABLE_RAG", "0")
+
+    assert processor.should_use_rag() is False
+
+
+def test_invalid_rag_top_k_falls_back(monkeypatch):
+    monkeypatch.setenv("ATS_RAG_TOP_K", "invalid")
+
+    assert processor.get_rag_top_k() == processor.DEFAULT_RAG_TOP_K
+
+
 def test_process_resume_returns_deterministic_report_without_mlx(monkeypatch):
     monkeypatch.setenv("ATS_ENABLE_MLX", "0")
     resume = make_pdf("Summary Applied AI Engineer. Skills Python FastAPI LLM evaluation.")
@@ -38,6 +50,7 @@ def test_process_resume_returns_deterministic_report_without_mlx(monkeypatch):
 
     assert "ATS Match Score:" in report
     assert "Matched Keywords:" in report
+    assert "Retrieved Guidance:" in report
     assert "Fit:" in report
 
 
@@ -68,4 +81,5 @@ def test_build_mlx_prompt_preserves_deterministic_boundaries():
     prompt = processor.build_mlx_prompt("ATS Match Score: 72/100", "Python role")
 
     assert "Do not change the score" in prompt
+    assert "retrieved guidance" in prompt
     assert "ATS Match Score: 72/100" in prompt

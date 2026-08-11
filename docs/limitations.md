@@ -1,8 +1,12 @@
 # Limitations
 
 - The ATS score is a heuristic score from this project, not a score from a commercial ATS vendor.
+- The score compares one resume against one job description; it is not an average across resumes or candidates.
+- The retrieval layer is lexical and local. It is useful for grounded guidance, not proof of semantic search quality.
 - The evaluation dataset is small and synthetic. It is useful for regression checks, not broad accuracy claims.
 - Scanned or image-only PDFs are rejected unless OCR has already been applied.
+- Encrypted PDFs are rejected because the app does not request or store PDF passwords.
+- PDFs over the configured page limit are rejected to keep public-demo runtime predictable.
 - PDF extraction quality depends on how the resume PDF is generated.
 - The public-demo usage limiter is file-backed and can reset when the deployment restarts or changes instance.
 - The usage limiter is not designed for high-security abuse prevention or multi-replica deployments.
@@ -13,6 +17,7 @@
 ## Recommended Next Improvements
 
 - Add OCR support for scanned PDFs.
+- Expand the local guidance corpus or add a vector store only if the retrieval corpus becomes large enough to justify it.
 - Expand the synthetic evaluation dataset across more job families.
 - Add screenshots for successful analysis output.
 - Add a durable usage-counter backend if the public demo receives real traffic.

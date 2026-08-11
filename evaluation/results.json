@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-23T15:01:46.701578+00:00",
+  "generated_at": "2026-08-11T15:38:21.759044+00:00",
   "environment": {
     "python": "3.14.5",
     "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O"
@@ -12,7 +12,7 @@
       "id": "ai_strong",
       "group": "applied_ai_engineer",
       "expected_strength": 3,
-      "score": 83,
+      "score": 87,
       "verdict": "Strong match",
       "matched_terms": [
         "generation evaluation",
@@ -22,26 +22,24 @@
         "prompt engineering",
         "evaluation pytest",
         "docker deployment",
-        "monitoring prompt",
-        "applied engineer",
         "system retrieval",
         "python fastapi",
-        "pytest docker"
+        "fastapi llm",
+        "llm system",
+        "engineering"
       ],
-      "missing_terms": [
-        "engineer need",
-        "need python"
-      ]
+      "missing_terms": []
     },
     {
       "id": "ai_moderate",
       "group": "applied_ai_engineer",
       "expected_strength": 2,
-      "score": 21,
+      "score": 23,
       "verdict": "Needs improvement",
       "matched_terms": [
         "deployment",
-        "python"
+        "python",
+        "pytest"
       ],
       "missing_terms": [
         "generation evaluation",
@@ -51,11 +49,11 @@
         "prompt engineering",
         "evaluation pytest",
         "docker deployment",
-        "monitoring prompt",
-        "applied engineer",
         "system retrieval",
         "python fastapi",
-        "engineer need"
+        "fastapi llm",
+        "llm system",
+        "engineering"
       ]
     },
     {
@@ -73,18 +71,18 @@
         "prompt engineering",
         "evaluation pytest",
         "docker deployment",
-        "monitoring prompt",
-        "applied engineer",
         "system retrieval",
         "python fastapi",
-        "engineer need"
+        "fastapi llm",
+        "llm system",
+        "engineering"
       ]
     },
     {
       "id": "nurse_strong",
       "group": "staff_nurse",
       "expected_strength": 3,
-      "score": 77,
+      "score": 87,
       "verdict": "Strong match",
       "matched_terms": [
         "certification communication",
@@ -100,23 +98,18 @@
         "control hospital",
         "hospital ward"
       ],
-      "missing_terms": [
-        "requirement patient",
-        "nurse requirement",
-        "position staff",
-        "requirement",
-        "position"
-      ]
+      "missing_terms": []
     },
     {
       "id": "nurse_moderate",
       "group": "staff_nurse",
       "expected_strength": 2,
-      "score": 21,
+      "score": 23,
       "verdict": "Needs improvement",
       "matched_terms": [
         "documentation",
-        "communication"
+        "communication",
+        "patient"
       ],
       "missing_terms": [
         "certification communication",
@@ -125,12 +118,12 @@
         "communication infection",
         "clinical documentation",
         "assessment medication",
-        "requirement patient",
         "patient assessment",
-        "nurse requirement",
         "documentation bls",
         "bls certification",
-        "infection control"
+        "infection control",
+        "control hospital",
+        "hospital ward"
       ]
     },
     {
@@ -149,12 +142,12 @@
         "communication infection",
         "clinical documentation",
         "assessment medication",
-        "requirement patient",
         "patient assessment",
-        "nurse requirement",
         "documentation bls",
         "bls certification",
-        "infection control"
+        "infection control",
+        "control hospital",
+        "hospital ward"
       ]
     }
   ],

@@ -3,6 +3,7 @@
 The app is a hybrid ATS-style checker:
 
 - `backend/scorer.py` creates the score and evidence deterministically.
+- `backend/rag.py` retrieves local guidance snippets that support recommendations.
 - `backend/processor.py` can ask MLX/Gemma 3 to explain the deterministic report.
 - The LLM is not allowed to change the score, matched keywords, missing keywords, or evidence.
 - Public deployments can run in deterministic mode when MLX/Apple Metal is unavailable.
@@ -17,7 +18,9 @@ flowchart TD
     L --> D["Safe PDF extraction<br/>utils/pdf_reader.py"]
     D --> E["Field-agnostic deterministic scoring<br/>backend/scorer.py"]
     C --> E
-    E --> F["ATS report<br/>score, evidence, gaps, fixes"]
+    E --> R["Local guidance retrieval<br/>backend/rag.py"]
+    R --> F["ATS report<br/>score, evidence, retrieved guidance"]
+    E --> F
     F --> G{"MLX enabled and available?"}
     G -- "Yes: Apple Silicon local run" --> H["Optional Gemma 3 explanation<br/>MLX"]
     G -- "No: CI/cloud/no Metal" --> I["Return deterministic report"]
@@ -35,6 +38,7 @@ flowchart TD
 2. `frontend/ui.py` collects the PDF resume and job description.
 3. `utils/usage_limiter.py` checks the client run limit before analysis.
 4. `utils/pdf_reader.py` extracts text from the uploaded PDF with size and validity checks.
+   It rejects encrypted, empty, malformed, image-only, over-size, and over-page-limit PDFs with controlled errors.
 5. `backend/scorer.py` calculates deterministic ATS signals:
    - matched keywords
    - missing or weak keywords
@@ -43,8 +47,9 @@ flowchart TD
    - content depth
    - role gaps
    - resume changes for the target job
-6. `backend/processor.py` returns the deterministic report unless MLX is explicitly enabled or automatically available on Apple Silicon.
-7. `frontend/ui.py` renders score, keyword evidence, gaps, recommendations, and a downloadable Markdown report.
+6. `backend/rag.py` retrieves local guidance snippets relevant to the job terms and scoring gaps.
+7. `backend/processor.py` returns the deterministic report unless MLX is explicitly enabled or automatically available on Apple Silicon.
+8. `frontend/ui.py` renders score, keyword evidence, gaps, recommendations, retrieved guidance, and a downloadable Markdown report.
 
 ## Deterministic Versus Generative Responsibilities
 
@@ -56,6 +61,8 @@ The deterministic scorer owns:
 - score breakdown
 - role gaps
 - resume-change recommendations
+
+The retrieval layer owns only supporting guidance. It does not compare candidates, average resume scores, call external services, or mutate deterministic scoring evidence.
 
 The optional MLX layer owns only explanation wording. If MLX fails, times out, or is unavailable, the deterministic report is returned without changing the app flow.
 
@@ -81,6 +88,7 @@ The log file is ignored by git. It captures startup, blocked submissions, accept
 app.py                    Streamlit entry point and submit flow
 frontend/ui.py            UI styling, input controls, and feedback rendering
 backend/scorer.py         Deterministic field-agnostic ATS scoring
+backend/rag.py            Local lexical retrieval for report guidance
 backend/processor.py      PDF-to-report orchestration and optional MLX explanation
 utils/pdf_reader.py       Safe PDF text extraction
 utils/usage_limiter.py    Privacy-aware per-client run limiting

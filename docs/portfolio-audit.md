@@ -2,9 +2,9 @@
 
 ## Executive Summary
 
-This project is a credible supporting AI engineering portfolio project after upgrades. Its strongest evidence is the engineering choice to keep deterministic ATS scoring as the source of truth while preserving optional local Gemma 3 explanations through MLX.
+This project is a credible supporting AI engineering portfolio project after upgrades. Its strongest evidence is the engineering choice to keep deterministic ATS scoring as the source of truth while using local retrieval and optional Gemma 3/MLX only as explanation support.
 
-Initial estimated score: 4.5/10. Final estimated score after this pass: 7.4/10.
+Initial estimated score: 4.5/10. Final estimated score after this pass: 7.7/10.
 
 ## Resume Decision
 
@@ -28,18 +28,19 @@ It is useful for Applied AI Engineer, LLM Engineer, Generative AI Engineer, AI E
 | --- | ---: |
 | Technical depth | 7 |
 | Software engineering quality | 8 |
-| AI/ML relevance | 7 |
+| AI/ML relevance | 8 |
 | Product usefulness | 7 |
 | Reliability | 8 |
 | Documentation | 8 |
 | Deployment readiness | 6 |
 | Testing quality | 8 |
 | Originality | 6 |
-| Resume value | 7 |
+| Resume value | 8 |
 
 ## Strongest Evidence
 
 - Deterministic scorer with explicit evidence and score breakdown.
+- Local retrieval-grounded guidance that supports recommendations without mutating the score.
 - Optional MLX/Gemma 3 explanation layer that does not control score or evidence.
 - CI-safe dependency split between deterministic mode and MLX mode.
 - Synthetic ranking consistency evaluation.
@@ -52,6 +53,7 @@ It is useful for Applied AI Engineer, LLM Engineer, Generative AI Engineer, AI E
 - Evaluation set is small and synthetic.
 - Current live URL was not publicly accessible during validation.
 - Scoring remains heuristic and should not be presented as a commercial ATS result.
+- Retrieval is a local lexical guidance layer, not a full semantic vector-search system.
 - Usage limiter is file-backed and resets across deployment restarts.
 - No OCR for scanned resumes.
 - No explicit license file.
@@ -61,6 +63,7 @@ It is useful for Applied AI Engineer, LLM Engineer, Generative AI Engineer, AI E
 - Added pytest suite for scoring, PDF parsing, processor fallback behavior, UI parsing, optional MLX behavior, and usage limiting.
 - Added synthetic evaluation dataset and ranking consistency script.
 - Added deterministic latency benchmark script and saved benchmark outputs.
+- Added local retrieval-grounded guidance for resume-improvement recommendations.
 - Added GitHub Actions CI and scheduled/manual benchmark workflow.
 - Split MLX into optional `requirements-mlx.txt`.
 - Added safer PDF extraction with size limits and controlled errors.
@@ -77,7 +80,7 @@ Latest local command:
 ATS_ENABLE_MLX=0 pytest -m "not mlx"
 ```
 
-Latest local result: 33 passed, 1 deselected.
+Latest local result: 45 passed, 1 deselected.
 
 ## Evaluation
 
@@ -95,9 +98,10 @@ Latest measured local run:
 - Python: 3.14.5
 - Platform: macOS-26.5.2-arm64-arm-64bit-Mach-O
 - Iterations: 10
-- PDF extraction median latency: 1.00 ms
-- Deterministic scoring median latency: 0.75 ms
-- Total analysis without MLX median latency: 2.90 ms
+- PDF extraction median latency: 0.89 ms
+- Deterministic scoring median latency: 0.56 ms
+- Local retrieved guidance median latency: 0.07 ms
+- Total deterministic report without MLX median latency: 2.52 ms
 - Score reproducible: true
 
 ## Deployment
@@ -127,19 +131,21 @@ CI runs linting, compile checks, non-MLX tests, evaluation, and a benchmark smok
 
 ## Resume Description
 
-ATS Resume Checker: built a deterministic PDF resume-to-job scoring app with optional local Gemma 3 explanations, CI-safe MLX fallback, synthetic ranking evaluation, and reproducible latency benchmarks.
+ATS Resume Checker: built a deterministic PDF resume-to-job scoring app with local retrieval-grounded guidance, optional Gemma 3 explanations, CI-safe MLX fallback, synthetic ranking evaluation, and reproducible latency benchmarks.
 
 ## Resume Bullets
 
 - Built a Streamlit ATS-style resume analyzer with deterministic scoring across keyword match, role alignment, resume structure, and content depth.
+- Added local retrieval-grounded guidance so recommendations are selected from a curated corpus without changing score evidence.
 - Preserved Gemma 3/MLX as an optional Apple Silicon explanation layer while keeping CI and cloud deployment free of GPU/model requirements.
 - Added pytest coverage for scoring, PDF parsing, fallback behavior, UI parsing, and privacy-aware usage limiting.
-- Created synthetic ranking evaluation and latency benchmarks showing 100.00% ranking consistency on 6 synthetic cases and 2.90 ms median deterministic analysis latency in one local 10-run benchmark.
+- Created synthetic ranking evaluation and latency benchmarks showing 100.00% ranking consistency on 6 synthetic cases and 2.52 ms median deterministic report latency in one local 10-run benchmark.
 
 ## Remaining Limitations
 
 - Public URL must be made accessible and retested before using it on a resume.
 - Evaluation data should be expanded before making stronger quality claims.
+- Retrieval should remain framed as local guidance retrieval until a larger semantic corpus exists.
 - A durable external store is needed if the two-run limiter must survive redeploys or scale across replicas.
 - Add OCR and an explicit license.
 
